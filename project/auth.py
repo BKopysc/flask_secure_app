@@ -3,7 +3,7 @@ from typing_extensions import Required
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user
-import time
+import datetime
 from .models import User
 from . import db
 import string
@@ -85,22 +85,32 @@ def login_post():
 
     user = User.query.filter_by(email=email).first()
 
-    if user and user.login_attempts > 5:
-        user.login_attempts = 0
-        flash('To many wrong attempts! Wait some time!', 'error')
-        db.session.commit()
-        return redirect(url_for('auth.login'))
-        #user.last_login= 
-        # datetime here!!!
-
-    time.sleep(1) # opoznienie sekunde (po stronie serwera wiec chyba zle)
-
     if not user :  # uzytkownik nie istnieje
         flash('Wrong email or password!', 'error')
         return redirect(url_for('auth.login'))
-    elif not check_password_hash(user.password, password):
+    
+    time_now = datetime.datetime.now()
+
+    if user and user.login_attempts is None:
+        user.login_attempts = 0
+        db.session.commit()
+    elif user and user.login_attempts > 5:
+        time_last = user.last_login
+        time_var = int((time_now-time_last).total_seconds())
+        if(time_var < 60):
+            flash('To many wrong attempts! Wait some time!', 'error')
+            return redirect(url_for('auth.login'))
+        else:
+            user.login_attempts = 0
+            user.last_login = time_now
+            db.session.commit()
+
+    #time.sleep(1) # opoznienie sekunde (po stronie serwera wiec chyba zle)
+
+    if not check_password_hash(user.password, password):
         flash('Wrong email or password!', 'error')
         user.login_attempts = user.login_attempts + 1
+        user.last_login = time_now
         db.session.commit()
         return redirect(url_for('auth.login'))
 
@@ -114,6 +124,10 @@ def login_post():
 def signup():
     return render_template('signup.html')
 
+@auth.route('/signup')
+def signup_again(data):
+    #print('data', data)
+    return render_template('signup.html',user_data=data)
 
 @auth.route('/signup', methods=['POST'])
 def signup_post():
@@ -122,7 +136,8 @@ def signup_post():
     surname = request.form.get('surname')
     password = request.form.get('password')
 
-    user_data = [email,name,surname]
+    #user_data = [email,name,surname]
+    user_data = email
 
     if(len(email) == 0 or len(name) == 0 or len(surname) == 0):
         flash('Some fields are empty!','error')
@@ -144,7 +159,8 @@ def signup_post():
     res = check_password_strength(password)
     if(res == 'len'):
         flash('Password must have at least 8 characters!','error')
-        return redirect(url_for('auth.signup', user_data=user_data))
+        #return redirect(url_for('auth.signup_again', data=user_data))
+        return render_template('signup.html',user_data=user_data)
     elif(res == 'digits'):
         flash('Password must have at least one digit!','error')
         return redirect(url_for('auth.signup'))
@@ -152,7 +168,8 @@ def signup_post():
         flash('Password must have at least one special character (e.g.: @, $, ?, !)!','error')
         return redirect(url_for('auth.signup'))
     elif(res == 'big'):
-        flash('Password must have at least one BIG letter!')
+        flash('Password must have at least one BIG letter!','error')
+        print("big letter")
         return redirect(url_for('auth.signup'))
 
     new_user = User(email=email, name=name, surname=surname,
