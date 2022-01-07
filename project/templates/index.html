@@ -1,10 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="title">
-  Flask Login Example
-</h1>
-<h2 class="subtitle">
-  Easy authentication and authorization in Flask.
-</h2>
-{% endblock %}
+<style>
+  .btn-group button {
+    display: block;
+    text-align: center;
+    width: 15rem;
+  }
+
+  .btn-group {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 10px;
+  }
+</style>
+
+<div class="hero-body">
+  <div class="container has-text-centered ">
+
+    <h1 style="font-size: 4rem" class="title">
+      Flask Secure App
+    </h1>
+    {% if not current_user.is_authenticated %}
+    <div class="btn-group">
+      <a href=signup><button class="button is-link is-large">Sign Up</button></a>
+    </div>
+    <div class="btn-group">
+      <a href=login><button class="button is-link is-large">Login</button></a>
+      {% endif %}
+      {% if current_user.is_authenticated %}
+      <div class="btn-group">
+        <a href=passwords><button class="button is-link is-large">Manage passwords</button></a>
+      </div>
+      <div class="btn-group">
+        <a href=logout><button class="button is-link is-large">Logout</button></a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% endblock %}

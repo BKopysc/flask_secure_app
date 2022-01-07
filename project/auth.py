@@ -124,9 +124,8 @@ def login_post():
 def signup():
     return render_template('signup.html')
 
-@auth.route('/signup')
-def signup_again(data):
-    #print('data', data)
+def ren_signup_again(data):
+    #print('data=', data)
     return render_template('signup.html',user_data=data)
 
 @auth.route('/signup', methods=['POST'])
@@ -136,8 +135,8 @@ def signup_post():
     surname = request.form.get('surname')
     password = request.form.get('password')
 
-    #user_data = [email,name,surname]
-    user_data = email
+    user_data = [email,name,surname]
+    #user_data = email
 
     if(len(email) == 0 or len(name) == 0 or len(surname) == 0):
         flash('Some fields are empty!','error')
@@ -159,18 +158,20 @@ def signup_post():
     res = check_password_strength(password)
     if(res == 'len'):
         flash('Password must have at least 8 characters!','error')
-        #return redirect(url_for('auth.signup_again', data=user_data))
         return render_template('signup.html',user_data=user_data)
     elif(res == 'digits'):
         flash('Password must have at least one digit!','error')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html',user_data=user_data)
+        #return redirect(url_for('auth.signup'))
     elif(res == 'special'):
         flash('Password must have at least one special character (e.g.: @, $, ?, !)!','error')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html',user_data=user_data)
+        #return redirect(url_for('auth.signup'))
     elif(res == 'big'):
         flash('Password must have at least one BIG letter!','error')
         print("big letter")
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html',user_data=user_data)
+        #return redirect(url_for('auth.signup'))
 
     new_user = User(email=email, name=name, surname=surname,
                     password=generate_password_hash(password, method='sha256'))
