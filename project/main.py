@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from . import db
 from .models import User, Password
@@ -23,6 +23,7 @@ def passwords():
     pass_data = []
     for passw in pass_query:
         dict = {
+            "id": passw.id,
             "owner": user_email,
             "name": passw.name,
             "shared": passw.shared,
@@ -32,4 +33,52 @@ def passwords():
     
     return render_template('passwords.html',name = pass_data, user_passwords = pass_data)
 
+@main.route('/passwords', methods =['POST'])
+@login_required
+def passwords_post():
+    name = request.form.get('name')
+    password = request.form.get('password')
+    secret = request.form.get('secret')
+
+    if(name == "" or password == "" or secret == ""):
+        flash('Some fields are empty!', 'error')
+        return redirect(url_for('main.passwords'))
+    
+    if(check_name(name) == False):
+        flash('Name contains not allowed chars!', 'error')
+        return redirect(url_for('main.passwords'))       
+
+    new_password = Password(owner_id = current_user.id, name=name, shared="none", password = password)
+    db.session.add(new_password)
+    db.session.commit()
+    flash(f'Password {name} added!', 'positive_message')
+    return redirect(url_for('main.passwords'))
+
+@main.route('/passwords/delete/<int:id>')
+@login_required
+def delete(id):
+    password_to_delete = Password.query.get_or_404(id)
+    try:
+        if(current_user.id == password_to_delete.owner_id):
+            db.session.delete(password_to_delete)
+            db.session.commit()
+            flash(f'Password for {password_to_delete.name} deleted!', 'positive_message')
+        else:
+            flash('No permission!', 'critical_message')
+        return redirect(url_for('main.passwords'))
+    except:
+        flash('Error!', 'critical_message')
+        return redirect(url_for('main.passwords'))
+
+
+special_chars = ['"', '\'', ';', '<','>','[',']', ' ','~','`','%']
+
+def check_name(name):
+    not_allowed_chars = special_chars
+    for sym in not_allowed_chars:
+        if sym in name:
+            return False
+    return True
+
+#def check_secret(secret):
 

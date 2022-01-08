@@ -1,4 +1,3 @@
-#!/bin/bash
-#export FLASK_APP=project
-#export FLASK_DEBUG=1
-echo test
+source auth/bin/activate
+export FLASK_APP=project
+export FLASK_DEBUG=1
