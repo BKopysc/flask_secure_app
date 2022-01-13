@@ -41,6 +41,7 @@ def passwords():
                 pass_data[ctr]['shared'].append(passw.user_id)
             else:
                 pass_data[ctr]['shared'].append(passw.user_id)
+        ctr += 1
     
     return render_template('passwords.html',name = pass_data, user_passwords = pass_data)
 
