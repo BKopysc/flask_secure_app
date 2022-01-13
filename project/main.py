@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from . import db
 from .models import User, Password, PasswordShared
+from sqlalchemy import and_
+
 main = Blueprint('main', __name__)
 
 @main.route('/')
@@ -21,29 +23,52 @@ def passwords():
 
     pass_query = Password.query.filter_by(owner_id=user_id).all()
     share_query = PasswordShared.query.filter_by(owner_id=user_id).all()
+    share_to_you_query = PasswordShared.query.filter_by(user_id = user_id).all()
     pass_data = []
+    shared_data =[]
+
     for passw in pass_query:
         dict = {
             "id": passw.id,
             "owner": user_email,
             "name": passw.name,
-            "shared": '---',
+            "shared": [],
+            "shared_count": 0,
             "password": passw.password
         }
         pass_data.append(dict)
 
-    ctr = 0
+    shared_info = []
+
     for passw in share_query:
-        if (pass_data[ctr]['id']==passw.password_id):
-            #dopisz mail
-            if(pass_data[ctr]['shared'] == '---'):
-                pass_data[ctr]['shared'] = []
-                pass_data[ctr]['shared'].append(passw.user_id)
-            else:
-                pass_data[ctr]['shared'].append(passw.user_id)
-        ctr += 1
+        for ps in pass_data:
+            if (ps['id']==passw.password_id):
+                ps['shared_count'] += 1
+                ps['shared'].append(passw.user_id)
+                # if(pass_data[ctr]['shared'] == '---'):
+                #     pass_data[ctr]['shared'] = []
+                #     pass_data[ctr]['shared'].append(passw.user_id)
+                #     pass_data[ctr]['shared_count'] += 1
+                # else:
+                #     pass_data[ctr]['shared'].append(passw.user_id)
+                #     pass_data[ctr]['shared_count'] += 1
+        #ctr += 1
     
-    return render_template('passwords.html',name = pass_data, user_passwords = pass_data)
+    for passw in share_to_you_query:
+        try:
+            get_pass_query = Password.query.get_or_404(passw.password_id)
+            get_owner_query = User.query.get_or_404(passw.owner_id)
+            dict = {
+                "id": passw.id,
+                "owner_email": get_owner_query.email,
+                "name": get_pass_query.name,
+                "password": get_pass_query.password
+            }
+            shared_data.append(dict)
+        except:
+            render_template('passwords.html')
+
+    return render_template('passwords.html',name = pass_data, user_passwords = pass_data, shared_passwords = shared_data)
 
 @main.route('/passwords', methods =['POST'])
 @login_required
@@ -70,9 +95,12 @@ def passwords_post():
 @login_required
 def delete(id):
     password_to_delete = Password.query.get_or_404(id)
+    password_share = PasswordShared.query.filter_by(password_id = id)
     try:
         if(current_user.id == password_to_delete.owner_id):
             db.session.delete(password_to_delete)
+            for passw in password_share:
+                db.session.delete(passw)
             db.session.commit()
             flash(f'Password for {password_to_delete.name} deleted!', 'positive_message')
         else:
@@ -94,25 +122,74 @@ def share(id):
                 flash('Some fields are empty!', 'errorShare')
                 flash(url,'errorShare')
                 return redirect(url_for('main.passwords'))
-            
+            if(second_user_mail == current_user.email):
+                flash('You entered your email!', 'errorShare')
+                flash(url,'errorShare')
+                return redirect(url_for('main.passwords'))            
+
             second_user = User.query.filter_by(email=second_user_mail).first()
+            check_if_exists = PasswordShared.query.filter(and_(PasswordShared.password_id == id, PasswordShared.user_id == second_user.id)).first()
+
 
             if(second_user == None):
                 flash('User doesn\'t exists!', 'errorShare')
                 flash(url,'errorShare')
                 return redirect(url_for('main.passwords'))
-            else:
+            if( not check_if_exists):
                 new_share = PasswordShared(password_id=password_to_share.id, owner_id = current_user.id, user_id = second_user.id)
                 db.session.add(new_share)
                 db.session.commit()
-            flash(f'Password for {password_to_share.name} shared!', 'positive_message')
+                flash(f'Password for {password_to_share.name} shared!', 'positive_message')
+            else:
+                flash('You shared for this user already!', 'errorShare')
+                flash(url,'errorShare')
         else:
             flash('No permission!', 'critical_message')
+
         return redirect(url_for('main.passwords'))
     except:
         flash('Error!', 'critical_message')
         return redirect(url_for('main.passwords'))
 
+@main.route('/passwords/shareView/<int:id>')
+@login_required
+def shareView(id):
+    password_query = Password.query.filter_by(id=id).first()
+    if(not password_query):
+        flash('Error', 'critical_message')
+        return redirect(url_for('main.passwords'))
+    if(password_query.owner_id != current_user.id):
+        flash('You don\'t have permission!', 'critical_message')
+        return redirect(url_for('main.passwords'))
+    
+    name = password_query.name
+    share_query = PasswordShared.query.filter_by(password_id=id).all()
+    share_data = []
+
+
+    for passw in share_query:
+        user_query = User.query.filter_by(id=passw.user_id).first()
+        dict = {
+            "id": passw.id,
+            "owner_id": passw.owner_id,
+            "user_name": user_query.email
+        }
+        share_data.append(dict)
+    return render_template("share.html", name=name, share_data = share_data)
+
+@main.route('/passwords/share/delete/<int:id>', methods=['POST'])
+@login_required
+def share_delete(id):
+    password_query= PasswordShared.query.filter_by(id=id).first()
+    id_origin = password_query.password_id
+    if(password_query.owner_id != current_user.id):
+        flash('You don\'t have permission!', 'critical_message')
+        return redirect(url_for('main.passwords'))
+        
+    db.session.delete(password_query)
+    db.session.commit()
+    flash('Share deleted!', 'positive_message')
+    return redirect(url_for('main.shareView',id=id_origin))
 
 special_chars = ['"', '\'', ';', '<','>','[',']', ' ','~','`','%']
 

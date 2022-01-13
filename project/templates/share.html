@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .hero-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    h1 {
+        padding-bottom: 30px;
+    }
+</style>
+
+{% with messages = get_flashed_messages(category_filter=["critical_message"]) %}
+{% if messages %}
+<article class="message is-danger">
+    <div class="message-header">
+        <p>Error</p>
+        <button class="delete" id="messageDelete" aria-label="delete"></button>
+    </div>
+    <div class="message-body">
+        {{ messages[0] }}
+    </div>
+</article>
+{% endif %}
+{% endwith %}
+
+{% with messages = get_flashed_messages(category_filter=["positive_message"]) %}
+{% if messages %}
+<article class="message is-success">
+    <div class="message-header">
+        <p>Success</p>
+        <button class="delete" id="messageDelete" aria-label="delete"></button>
+    </div>
+    <div class="message-body">
+        {{ messages[0] }}
+    </div>
+</article>
+{% endif %}
+{% endwith %}
+
+<div class="hero-body">
+    <div class="titleDiv">
+        <h2 class="title is-4">Manage access for:</h2>
+        <h1 class="title is-1 has-text-centered title-color">
+            {% if name %}
+            {{name}}
+            {% endif %}
+        </h1>
+    </div>
+    <div class="shareViewDiv" style="width: 20%; align-items: center;">
+        <table class='table is-bordered is-hoverable' style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width:70%">User</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in share_data %}
+                <tr>
+                    <td>{{ row['user_name'] }}</td>
+                    <td style="text-align: center;">
+                        <form action="{{ url_for('main.share_delete',id=row['id']) }}" method="post">
+                            <button class="button is-danger" id="deleteshareBtn{{ row['id'] }}"
+                                type="submit">Delete</button>
+                        </form>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+        <div class="backDiv">
+            <a href="{{ url_for('main.passwords') }}" class="button is-info" style="width: 100%;">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+
+</script>
