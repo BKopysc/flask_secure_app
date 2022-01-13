@@ -16,3 +16,9 @@ class Password(db.Model):
     name = db.Column(db.String(100))
     shared = db.Column(db.String(2000))
     password = db.Column(db.String(100))
+
+class PasswordShared(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    password_id = db.Column(db.Integer, db.ForeignKey('password.id'))
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
