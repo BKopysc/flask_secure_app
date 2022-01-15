@@ -129,12 +129,29 @@ def ren_signup_again(data):
     #print('data=', data)
     return render_template('signup.html',user_data=data)
 
+def check_password_render(password):
+    res = check_password_strength(password)
+    err = True
+    if(res == 'len'):
+        flash('Password must have at least 8 characters!','error')
+    elif(res == 'digits'):
+        flash('Password must have at least one digit!','error')
+    elif(res == 'special'):
+        flash('Password must have at least one special character (e.g.: @, $, ?, !)!','error')
+    elif(res == 'big'):
+        flash('Password must have at least one BIG letter!','error')
+    else:
+        err = False
+    return err
+
+
 @auth.route('/signup', methods=['POST'])
 def signup_post():
     email = request.form.get('email')  # unikalny
     name = request.form.get('name')
     surname = request.form.get('surname')
     password = request.form.get('password')
+    re_password = request.form.get('repassword')
 
     user_data = [email,name,surname]
     #user_data = email
@@ -150,29 +167,38 @@ def signup_post():
     user = User.query.filter_by(email=email).first()
     if user:  # jesli email istnieje to wracamy
         flash('Email address is signed up!','exists')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html',user_data=user_data)
     
     if(check_person_info(name) == False or check_person_info(surname) == False):
         flash('Name/Surname contains not allowed chars!','error')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html',user_data=user_data)
+        #return redirect(url_for('auth.signup'))
 
-    res = check_password_strength(password)
-    if(res == 'len'):
-        flash('Password must have at least 8 characters!','error')
+    # res = check_password_strength(password)
+    # if(res == 'len'):
+    #     flash('Password must have at least 8 characters!','error')
+    #     return render_template('signup.html',user_data=user_data)
+    # elif(res == 'digits'):
+    #     flash('Password must have at least one digit!','error')
+    #     return render_template('signup.html',user_data=user_data)
+    #     #return redirect(url_for('auth.signup'))
+    # elif(res == 'special'):
+    #     flash('Password must have at least one special character (e.g.: @, $, ?, !)!','error')
+    #     return render_template('signup.html',user_data=user_data)
+    #     #return redirect(url_for('auth.signup'))
+    # elif(res == 'big'):
+    #     flash('Password must have at least one BIG letter!','error')
+    #     print("big letter")
+    #     return render_template('signup.html',user_data=user_data)
+    #     #return redirect(url_for('auth.signup'))
+    pass_ren = check_password_render(password)
+    if(pass_ren == True):
         return render_template('signup.html',user_data=user_data)
-    elif(res == 'digits'):
-        flash('Password must have at least one digit!','error')
+    
+    if(password != re_password):
+        flash('Passwords are not equals!','error')
         return render_template('signup.html',user_data=user_data)
-        #return redirect(url_for('auth.signup'))
-    elif(res == 'special'):
-        flash('Password must have at least one special character (e.g.: @, $, ?, !)!','error')
-        return render_template('signup.html',user_data=user_data)
-        #return redirect(url_for('auth.signup'))
-    elif(res == 'big'):
-        flash('Password must have at least one BIG letter!','error')
-        print("big letter")
-        return render_template('signup.html',user_data=user_data)
-        #return redirect(url_for('auth.signup'))
+
 
     restore_password = get_random_password()
     hash_restore_password = generate_password_hash(restore_password, method='sha256')
@@ -190,6 +216,51 @@ def signup_post():
 
 @auth.route('/signup/restorePassword')
 def restore_password():
+    return render_template('changeForgottenPassword.html')
+
+@auth.route('/signup/restorePassword', methods=['POST'])
+def restore_password_post():
+    email = request.form.get('email')  # unikalny
+    restore_password = request.form.get('restore_password')
+    password = request.form.get('password')
+    re_password = request.form.get('repassword')
+
+    user_data = [email,restore_password]
+
+    if(len(email) == 0 or len(password) == 0 or len(re_password) == 0):
+        flash('Some fields are empty!','error')
+        return redirect(url_for('auth.restore_password'))
+
+    if(check_email(email) == False):
+        flash('Email contains not allowed chars!','error')
+        return redirect(url_for('auth.restore_password'))
+    
+    user = User.query.filter_by(email=email).first()
+    if(user):
+        restore_password_hash = check_password_hash(user.restore_password, restore_password)
+        if(not restore_password_hash):
+            flash('Restore password is wrong!','error')
+            return render_template('changeForgottenPassword.html',user_data=user_data)
+
+        pass_ren = check_password_render(password)
+        if(pass_ren == True):
+            return render_template('changeForgottenPassword.html',user_data=user_data)
+        
+        if(password != re_password):
+            flash('New Passwords are not equals!','error')
+            return render_template('changeForgottenPassword.html',user_data=user_data)
+
+
+        new_restore_password = get_random_password()
+        hash_restore_password = generate_password_hash(new_restore_password, method='sha256')
+        hash_password=generate_password_hash(password, method='sha256')
+
+        user.restore_password = hash_restore_password
+        user.password = hash_password
+        db.session.commit()
+        flash('Password changed! Look for a new restoration password!','positive_message')
+        return render_template('restorePassword.html', restore_password = new_restore_password)
+
     return render_template('changeForgottenPassword.html')
 
 @auth.route('/logout')

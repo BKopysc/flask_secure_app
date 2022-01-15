@@ -88,7 +88,7 @@ def passwords_post():
     encrypted_password = encrypted[0]
     iv = encrypted[1]
 
-    new_password = Password(owner_id = current_user.id, name=name, shared="none", password = encrypted_password)
+    new_password = Password(owner_id = current_user.id, name=name, password = encrypted_password)
     db.session.add(new_password)
     db.session.commit()
     flash(f'Password {name} added!', 'positive_message')
