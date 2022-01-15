@@ -117,7 +117,7 @@ def login_post():
     login_user(user)
     user.login_attempts = 0
     db.session.commit()
-    return redirect(url_for('main.profile'))
+    return redirect(url_for('main.index'))
 
 
 @auth.route('/signup')

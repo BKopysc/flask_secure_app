@@ -10,10 +10,10 @@ main = Blueprint('main', __name__)
 def index():
     return render_template('index.html')
 
-@main.route('/profile')
-@login_required
-def profile():
-    return render_template('profile.html', name=current_user.name)
+# @main.route('/profile')
+# @login_required
+# def profile():
+#     return render_template('profile.html', name=current_user.name)
 
 @main.route('/passwords')
 @login_required
@@ -126,15 +126,14 @@ def share(id):
                 flash('You entered your email!', 'errorShare')
                 flash(url,'errorShare')
                 return redirect(url_for('main.passwords'))            
-
             second_user = User.query.filter_by(email=second_user_mail).first()
-            check_if_exists = PasswordShared.query.filter(and_(PasswordShared.password_id == id, PasswordShared.user_id == second_user.id)).first()
-
-
             if(second_user == None):
                 flash('User doesn\'t exists!', 'errorShare')
                 flash(url,'errorShare')
                 return redirect(url_for('main.passwords'))
+
+
+            check_if_exists = PasswordShared.query.filter(and_(PasswordShared.password_id == id, PasswordShared.user_id == second_user.id)).first()
             if( not check_if_exists):
                 new_share = PasswordShared(password_id=password_to_share.id, owner_id = current_user.id, user_id = second_user.id)
                 db.session.add(new_share)

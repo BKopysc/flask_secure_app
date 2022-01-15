@@ -1,12 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="hero-body">
-  <div class="container has-text-centered ">
+<style>
+  .btn-group button {
+    display: block;
+    text-align: center;
+    width: 15rem;
+  }
 
-    <h1 class="title">
-      Welcome, {{ name }}!
+  .btn-group {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 10px;
+  }
+</style>
+<div class="hero-body">
+  <div class="container has-text-centered">
+    <h1 class="title is-4">
+      Welcome:
     </h1>
+    <h1 class="title is-2">
+      {{ user_data['name'] }} {{ user_data['surname'] }}
+    </h1>
+    <div class="btn-group">
+      <button class="button is-info is-large btn-group">
+        Change email
+      </button>
+    </div>
+    <div class="btn-group">
+      <button class="button is-info is-large btn-group">
+        Change password
+      </button>
+    </div>
+    <div class="btn-group">
+      <button class="button is-danger is-large btn-group">
+        Delete account
+      </button>
+    </div>
   </div>
 </div>
 {% endblock %}
