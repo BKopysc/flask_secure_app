@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from . import db
 from .models import User, Password, PasswordShared
 from sqlalchemy import and_
+from .utils.cipher_util import encrypt_AES, decrypt_AES
 
 main = Blueprint('main', __name__)
 
@@ -15,6 +16,7 @@ def index():
 # def profile():
 #     return render_template('profile.html', name=current_user.name)
 
+# wyswietlanie serwisow/hasel
 @main.route('/passwords')
 @login_required
 def passwords():
@@ -45,14 +47,7 @@ def passwords():
             if (ps['id']==passw.password_id):
                 ps['shared_count'] += 1
                 ps['shared'].append(passw.user_id)
-                # if(pass_data[ctr]['shared'] == '---'):
-                #     pass_data[ctr]['shared'] = []
-                #     pass_data[ctr]['shared'].append(passw.user_id)
-                #     pass_data[ctr]['shared_count'] += 1
-                # else:
-                #     pass_data[ctr]['shared'].append(passw.user_id)
-                #     pass_data[ctr]['shared_count'] += 1
-        #ctr += 1
+
     
     for passw in share_to_you_query:
         try:
@@ -70,22 +65,30 @@ def passwords():
 
     return render_template('passwords.html',name = pass_data, user_passwords = pass_data, shared_passwords = shared_data)
 
+# dodawanie nowego serwisu/hasla
 @main.route('/passwords', methods =['POST'])
 @login_required
 def passwords_post():
     name = request.form.get('name')
     password = request.form.get('password')
-    secret = request.form.get('secret')
+    secret_key = request.form.get('secret')
 
-    if(name == "" or password == "" or secret == ""):
+    if(name == "" or password == "" or secret_key == ""):
         flash('Some fields are empty!', 'error')
         return redirect(url_for('main.passwords'))
     
     if(check_name(name) == False):
         flash('Name contains not allowed chars!', 'error')
-        return redirect(url_for('main.passwords'))       
+        return redirect(url_for('main.passwords'))   
 
-    new_password = Password(owner_id = current_user.id, name=name, shared="none", password = password)
+    # weryfikacja maila
+    # weryfikacja klucza
+
+    encrypted = encrypt_AES(secret_key, password)
+    encrypted_password = encrypted[0]
+    iv = encrypted[1]
+
+    new_password = Password(owner_id = current_user.id, name=name, shared="none", password = encrypted_password)
     db.session.add(new_password)
     db.session.commit()
     flash(f'Password {name} added!', 'positive_message')

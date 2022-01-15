@@ -13,3 +13,13 @@ def show_profile():
         "surname": current_user.surname
     }
     return render_template('profile.html', user_data=user_data)
+
+@profile.route('/changePassword')
+@login_required
+def change_password():
+    return render_template('changePassword.html')
+
+@profile.route('/changePassword',methods=['POST'])
+@login_required
+def change_password_post():
+    return render_template('changePassword.html')

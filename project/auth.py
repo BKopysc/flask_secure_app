@@ -7,6 +7,7 @@ import datetime
 from .models import User
 from . import db
 import string
+from .utils.cipher_util import get_random_password
 
 auth = Blueprint('auth', __name__)
 
@@ -173,13 +174,23 @@ def signup_post():
         return render_template('signup.html',user_data=user_data)
         #return redirect(url_for('auth.signup'))
 
+    restore_password = get_random_password()
+    hash_restore_password = generate_password_hash(restore_password, method='sha256')
+    hash_password=generate_password_hash(password, method='sha256')
     new_user = User(email=email, name=name, surname=surname,
-                    password=generate_password_hash(password, method='sha256'))
+                    password=hash_password, restore_password=hash_restore_password)
 
     db.session.add(new_user)
     db.session.commit()
-    return redirect(url_for('auth.login'))
 
+
+    flash('You have been successfull signed up!', "positive_message")
+    #return redirect(url_for('auth.login'))
+    return render_template('restorePassword.html', restore_password=restore_password)
+
+@auth.route('/signup/restorePassword')
+def restore_password():
+    return render_template('changeForgottenPassword.html')
 
 @auth.route('/logout')
 @login_required

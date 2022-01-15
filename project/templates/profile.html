@@ -2,7 +2,7 @@
 
 {% block content %}
 <style>
-  .btn-group button {
+  .btn-group .button {
     display: block;
     text-align: center;
     width: 15rem;
@@ -28,9 +28,9 @@
       </button>
     </div>
     <div class="btn-group">
-      <button class="button is-info is-large btn-group">
+      <a href="{{ url_for('profile.change_password') }}" class="button is-info is-large btn-group">
         Change password
-      </button>
+      </a>
     </div>
     <div class="btn-group">
       <button class="button is-danger is-large btn-group">
