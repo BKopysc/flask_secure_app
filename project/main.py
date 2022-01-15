@@ -193,6 +193,17 @@ def share_delete(id):
     flash('Share deleted!', 'positive_message')
     return redirect(url_for('main.shareView',id=id_origin))
 
+@main.route('/passwords/decrypt/<int:id>', methods=['POST'])
+@login_required
+def decrypt(id):
+    secret = request.form.get('secret')
+    password_query= Password.query.filter_by(id=id).first()
+    print(type(password_query.password))
+    res = decrypt_AES(password_query.password, secret, password_query.iv)
+    flash(secret,'positive_message')
+    flash(res, 'secret')
+    return redirect(url_for('main.passwords'))
+
 special_chars = ['"', '\'', ';', '<','>','[',']', ' ','~','`','%']
 
 def check_name(name):
