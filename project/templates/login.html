@@ -5,6 +5,8 @@
 <div class="hero-body">
     <div class="container has-text-centered ">
         <div class="column is-4 is-offset-4">
+
+            {% if not current_user.is_authenticated %}
             <h3 class="title">Login</h3>
             <div class="box">
                 {% with messages = get_flashed_messages() %}
@@ -40,6 +42,10 @@
                     </div>
                 </form>
             </div>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+            <h3 class="title">You ale logged in!</h3>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -3,6 +3,8 @@ from Cryptodome.Random import get_random_bytes
 import random
 import string
 
+#from project.main import decrypt
+
 
 def make_key(key):
     if(len(key) < 16):
@@ -45,9 +47,9 @@ def encrypt_AES(key_str, data_str):
     iv = get_random_bytes(16)
     key = make_key(key_str)
     data = make_data(data_str)
-
     aes = AES.new(key, AES.MODE_CBC, iv)
     encrypted = aes.encrypt(data)
+    print(key, iv, encrypted)
     return [encrypted, iv]
 
 def decrypt_AES(encrypted, key_str, iv):
@@ -55,6 +57,7 @@ def decrypt_AES(encrypted, key_str, iv):
     aes = AES.new(key, AES.MODE_CBC, iv)
     decrypted = aes.decrypt(encrypted)
     decrypted_data = remake_data(decrypted)
+    print(key, iv, encrypted, decrypted)
     return decrypted_data
 
 def test(): # przyklad uzycia

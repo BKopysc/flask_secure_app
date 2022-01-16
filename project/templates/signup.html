@@ -3,8 +3,8 @@
 {% block content %}
 <div class="hero-body">
     <div class="container has-text-centered ">
-
         <div class="column is-4 is-offset-4">
+            {% if not current_user.is_authenticated %}
             <h3 class="title">Sign Up</h3>
             <div class="box">
 
@@ -60,6 +60,10 @@
                     <button class="button is-block is-info is-large is-fullwidth">Sign Up</button>
                 </form>
             </div>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+            <h1 class="title">You are logged in!</h1>
+            {% endif %}
         </div>
     </div>
 </div>
