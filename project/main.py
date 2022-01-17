@@ -94,24 +94,24 @@ def passwords_post():
     password = request.form.get('password')
     secret_key = request.form.get('secret')
 
-    if(name == "" or password == "" or secret_key == ""):
-        flash('Some fields are empty!', 'error')
+    if(len(name) == 0 or len(password) == 0 or len(secret_key) == 0):
+        flash('Some fields are empty!', 'errorAdd')
         return redirect(url_for('main.passwords'))
 
     if(len(name) > 50 or len(password) > 50 or len(secret_key) > 50):
-        flash('Some fields are too long!', 'error')
+        flash('Some fields are too long!', 'errorAdd')
         return redirect(url_for('main.passwords'))
 
     if(check_name(name) == False):
-        flash('Name contains not allowed chars!', 'error')
+        flash('Name contains not allowed chars!', 'errorAdd')
         return redirect(url_for('main.passwords'))
 
     if(check_password(password) == False):
-        flash('Password contains not allowed chars!', 'error')
+        flash('Password contains not allowed chars!', 'errorAdd')
         return redirect(url_for('main.passwords'))
 
     if(check_secret(secret_key) == False):
-        flash('Secret Key contains not allowed chars!', 'error')
+        flash('Secret Key contains not allowed chars!', 'errorAdd')
         return redirect(url_for('main.passwords'))
 
     encrypted = encrypt_AES(secret_key, password)

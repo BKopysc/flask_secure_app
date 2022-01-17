@@ -27,14 +27,14 @@ def check_person_info(name):
     return True
 
 def check_password(passwd):
-    not_allowed_chars = ['<','>','`',';']
+    not_allowed_chars = ['<','>','`',';',' ']
     for sym in not_allowed_chars:
         if sym in passwd:
             return False
     return True
 
 def check_secret(secret):
-    not_allowed_chars = ['<','>','`',';']
+    not_allowed_chars = ['<','>','`',';',' ']
     for sym in not_allowed_chars:
         if sym in secret:
             return False

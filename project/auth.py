@@ -95,15 +95,15 @@ def signup_post():
 
     if(len(email) == 0 or len(name) == 0 or len(surname) == 0 or len(password) == 0 or len(re_password) == 0):
         flash('Some fields are empty!', 'error')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html', user_data=user_data)
 
     if(len(email) > 50 or len(name) > 50 or len(surname) > 50 or len(password) > 50 or len(re_password) > 50):
         flash('Some fields are too long!', 'error')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html', user_data=user_data)
 
     if(check_email(email) == False):
         flash('Email contains not allowed chars!', 'error')
-        return redirect(url_for('auth.signup'))
+        return render_template('signup.html', user_data=user_data)
 
     user = User.query.filter_by(email=email).first()
     if user:  # jesli email istnieje to wracamy
@@ -115,23 +115,6 @@ def signup_post():
         return render_template('signup.html', user_data=user_data)
         # return redirect(url_for('auth.signup'))
 
-    # res = check_password_strength(password)
-    # if(res == 'len'):
-    #     flash('Password must have at least 8 characters!','error')
-    #     return render_template('signup.html',user_data=user_data)
-    # elif(res == 'digits'):
-    #     flash('Password must have at least one digit!','error')
-    #     return render_template('signup.html',user_data=user_data)
-    #     #return redirect(url_for('auth.signup'))
-    # elif(res == 'special'):
-    #     flash('Password must have at least one special character (e.g.: @, $, ?, !)!','error')
-    #     return render_template('signup.html',user_data=user_data)
-    #     #return redirect(url_for('auth.signup'))
-    # elif(res == 'big'):
-    #     flash('Password must have at least one BIG letter!','error')
-    #     print("big letter")
-    #     return render_template('signup.html',user_data=user_data)
-    #     #return redirect(url_for('auth.signup'))
     pass_ren = check_password_flash(password)
     if(pass_ren == True):
         return render_template('signup.html', user_data=user_data)

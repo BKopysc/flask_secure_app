@@ -1,3 +1,4 @@
 auth/
 extra/project.code-workspace
 extra/sources.txt
+venv/
